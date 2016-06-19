@@ -2,7 +2,7 @@
   "Utilities related to SAM/BAM format."
   (:require [clojure.string :as cstr]
             [cljam.cigar :refer [count-ref]]
-            [cljam.util :refer [ubyte str->int]]))
+            [cljam.util :refer [ubyte str->int str->float]]))
 
 ;;; parse
 
@@ -43,7 +43,7 @@
     \S (str->int val)
     \c (str->int val)
     \C (str->int val)
-    \f (float (str->int val))
+    \f (str->float val)
     \H nil ;;FIXME
     (throw (Exception. "Unrecognized tag type"))))
 
