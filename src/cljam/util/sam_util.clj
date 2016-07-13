@@ -342,19 +342,19 @@
 
 ;;; fastq and phred
 
-(defmulti fastq->phred class)
+(definline fastq-char->phred-byte [ch]
+  `(let [ch# (int ~ch)]
+     (assert (<= 33 ch# 126))
+     (byte (- ch# 33))))
 
-(defmethod fastq->phred String
-  [^String fastq]
-  (let [length (count fastq)]
-    (byte-array (for [i (range length)]
-                  (fastq->phred (.charAt fastq i))))))
+(defn fastq->phred [^String fastq]
+  (let [length (count fastq)
+        result (byte-array length)]
+    (dotimes [i length]
+      (aset-byte result i (fastq-char->phred-byte (.charAt fastq i))))
+    result))
 
-(defmethod fastq->phred Character
-  [ch]
-  {:pre [(<= 33 (int ch) 126)]}
-  (byte (- (int ch) 33)))
-
+;;; TODO: fastq->phred同様の最適化を行う余地がある
 (defmulti phred->fastq class)
 
 (defmethod phred->fastq (class (byte-array nil))
