@@ -70,6 +70,16 @@
         nil))
     nil))
 
+(defn str->float
+  [s]
+  (if-not (nil? s)
+    (try
+      (let [[n _ _ _] (re-matches #"(|-|\+)(\d+)\.?(\d*)" s)]
+        (Float. ^String n))
+      (catch Exception e
+        nil))
+    nil))
+
 (defn graph?
   "Returns true if c is a visible character, false if not."
   [c]
@@ -105,4 +115,3 @@
   [path]
   (let [filename (.getName (file path))]
     (first (cstr/split filename #"\.(?=[^\.]+$)"))))
-
