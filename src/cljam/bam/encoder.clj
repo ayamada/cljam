@@ -107,7 +107,7 @@
 (defn- encode-tag-value [val-type value]
   (case val-type
     \A (let [bb (.order (ByteBuffer/allocate 8) ByteOrder/LITTLE_ENDIAN)]
-         (.put bb (byte-array 1 (char value)))
+         (.putChar bb (char value))
          (.array bb))
     \i (let [bb (.order (ByteBuffer/allocate 8) ByteOrder/LITTLE_ENDIAN)]
          (.putInt bb (int value))
@@ -163,43 +163,42 @@
              (encode-tag-value (first (:type value)) (:value value))]))
         (:options aln))])
 
-(defn write-encoded-alighment
-  [wtr aln]
-  (let [w (.writer wtr)]
-    ;; block_size
-    (lsb/write-int w (nth aln 0))
-    ;; refID
-    (lsb/write-int w (nth aln 1))
-    ;; pos
-    (lsb/write-int w (nth aln 2))
-    ;; bin_mq_nl
-    (lsb/write-ubyte w (nth aln 3))
-    (lsb/write-ubyte w (nth aln 4))
-    (lsb/write-ushort w (nth aln 5))
-    ;; flag_nc
-    (lsb/write-ushort w (nth aln 6))
-    (lsb/write-ushort w (nth aln 7))
-    ;; l_seq
-    (lsb/write-int w (nth aln 8))
-    ;; next_refID
-    (lsb/write-int w (nth aln 9))
-    ;; next_pos
-    (lsb/write-int w (nth aln 10))
-    ;; tlen
-    (lsb/write-int w (nth aln 11))
-    ;; read_name
-    (lsb/write-string w (nth aln 12))
-    (lsb/write-bytes w (nth aln 13))
-    ;; cigar
-    (doseq [cigar (nth aln 14)]
-      (lsb/write-int w cigar))
-    ;; seq
-    (lsb/write-bytes w (nth aln 15))
-    ;; qual
-    (lsb/write-bytes w (nth aln 16))
-    ;; options
-    (doseq [v (nth aln 17)]
-      (lsb/write-short w (nth v 0))
-      (lsb/write-bytes w (nth v 1))
-      (when-not (nil? (nth v 2))
-        (lsb/write-bytes w (nth v 2))))))
+(defn write-encoded-alignment
+  [w aln]
+  ;; block_size
+  (lsb/write-int w (nth aln 0))
+  ;; refID
+  (lsb/write-int w (nth aln 1))
+  ;; pos
+  (lsb/write-int w (nth aln 2))
+  ;; bin_mq_nl
+  (lsb/write-ubyte w (nth aln 3))
+  (lsb/write-ubyte w (nth aln 4))
+  (lsb/write-ushort w (nth aln 5))
+  ;; flag_nc
+  (lsb/write-ushort w (nth aln 6))
+  (lsb/write-ushort w (nth aln 7))
+  ;; l_seq
+  (lsb/write-int w (nth aln 8))
+  ;; next_refID
+  (lsb/write-int w (nth aln 9))
+  ;; next_pos
+  (lsb/write-int w (nth aln 10))
+  ;; tlen
+  (lsb/write-int w (nth aln 11))
+  ;; read_name
+  (lsb/write-string w (nth aln 12))
+  (lsb/write-bytes w (nth aln 13))
+  ;; cigar
+  (doseq [cigar (nth aln 14)]
+    (lsb/write-int w cigar))
+  ;; seq
+  (lsb/write-bytes w (nth aln 15))
+  ;; qual
+  (lsb/write-bytes w (nth aln 16))
+  ;; options
+  (doseq [v (nth aln 17)]
+    (lsb/write-short w (nth v 0))
+    (lsb/write-bytes w (nth v 1))
+    (when-not (nil? (nth v 2))
+      (lsb/write-bytes w (nth v 2)))))

@@ -16,6 +16,7 @@
                    [dict :as dict]
                    [pileup :as plp]
                    [level :as level])
+            [cljam.bam.encoder :as bae]
             [cljam.util.sam-util :refer [stringify-header stringify-alignment]])
   (:import [java.io BufferedWriter OutputStreamWriter]))
 
@@ -99,6 +100,9 @@
         options-summary]
        (cstr/join \newline)))
 
+(def ^:private num-block 500000)
+(def ^:private num-write-block 50000)
+
 (defn convert [args]
   (let [{:keys [options arguments errors summary]} (parse-opts args convert-cli-options)]
     (cond
@@ -108,11 +112,26 @@
     (let [[in out] arguments]
       (with-open [wtr (writer out)]
         (with-open [rdr (reader in)]
-          (let [hdr (io/read-header rdr)]
+          (let [hdr (io/read-header rdr)
+                w (.writer wtr)]
             (io/write-header wtr hdr)
             (io/write-refs wtr hdr)
-            (doseq [alns (partition-all 10000 (io/read-alignments rdr {}))]
-              (io/write-alignments wtr alns hdr)))))))
+            ;; TODO: cljam.bam.encoderの動作確認の為に、
+            ;;       以前からの cljam.bam.writer を使う方法と、
+            ;;       新しい cljam.bam.encoder を使う方法の両方を
+            ;;       スイッチできるようにしている
+            (if false
+              ;; cljam.bam.writer を使うコード
+              (doseq [alns (partition-all 10000 (io/read-alignments rdr {}))]
+                (io/write-alignments wtr alns hdr))
+              ;; cljam.bam.encoder を使うコード
+              (doseq [alns (partition-all num-block (io/read-alignments rdr {}))]
+                (let [blocks (doall (pmap (fn [lalns]
+                                            (map #(bae/encode % hdr) lalns))
+                                          (partition-all num-write-block alns)))]
+                  (doseq [block blocks]
+                    (doseq [e block]
+                      (bae/write-encoded-alignment w e)))))))))))
   nil)
 
 ;; ### normalize command
