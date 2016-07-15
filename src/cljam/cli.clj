@@ -17,7 +17,8 @@
                    [pileup :as plp]
                    [level :as level])
             [cljam.bam.encoder :as bae]
-            [cljam.util.sam-util :refer [stringify-header stringify-alignment]])
+            [cljam.util.sam-util :refer [stringify-header stringify-alignment
+                                         make-refs]])
   (:import [java.io BufferedWriter OutputStreamWriter]))
 
 ;; CLI functions
@@ -112,8 +113,7 @@
     (let [[in out] arguments]
       (with-open [wtr (writer out)]
         (with-open [rdr (reader in)]
-          (let [hdr (io/read-header rdr)
-                w (.writer wtr)]
+          (let [hdr (io/read-header rdr)]
             (io/write-header wtr hdr)
             (io/write-refs wtr hdr)
             ;; TODO: cljam.bam.encoderの動作確認の為に、
@@ -125,13 +125,15 @@
               (doseq [alns (partition-all 10000 (io/read-alignments rdr {}))]
                 (io/write-alignments wtr alns hdr))
               ;; cljam.bam.encoder を使うコード
-              (doseq [alns (partition-all num-block (io/read-alignments rdr {}))]
-                (let [blocks (doall (pmap (fn [lalns]
-                                            (map #(bae/encode % hdr) lalns))
-                                          (partition-all num-write-block alns)))]
-                  (doseq [block blocks]
-                    (doseq [e block]
-                      (bae/write-encoded-alignment w e)))))))))))
+              (let [refs (make-refs hdr)
+                    w (.writer wtr)]
+                (doseq [alns (partition-all num-block (io/read-alignments rdr {}))]
+                  (let [blocks (doall (pmap (fn [lalns]
+                                              (map #(bae/encode % refs) lalns))
+                                            (partition-all num-write-block alns)))]
+                    (doseq [block blocks]
+                      (doseq [e block]
+                        (bae/write-encoded-alignment w e))))))))))))
   nil)
 
 ;; ### normalize command
