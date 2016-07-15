@@ -8,7 +8,7 @@
                                          bytes->compressed-bases make-refs ref-id
                                          stringify-header]]
             [cljam.bam.common :refer [bam-magic fixed-block-size]])
-  (:import [java.nio ByteBuffer ByteOrder]))
+  (:import [java.util Arrays]))
 
 (def ^:private fixed-tag-size 3)
 (def ^:private fixed-binary-array-tag-size 5)
@@ -106,32 +106,37 @@
 
 (defn- encode-tag-value [val-type value]
   (case val-type
-    \A (let [bb (.order (ByteBuffer/allocate 8) ByteOrder/LITTLE_ENDIAN)]
+    \A (let [bb (lsb/gen-byte-buffer)]
          (.putChar bb (char value))
-         (.array bb))
-    \i (let [bb (.order (ByteBuffer/allocate 8) ByteOrder/LITTLE_ENDIAN)]
+         (Arrays/copyOfRange (.array bb) 0 1))
+    \i (let [bb (lsb/gen-byte-buffer)]
          (.putInt bb (int value))
-         (.array bb))
-    \f (let [bb (.order (ByteBuffer/allocate 8) ByteOrder/LITTLE_ENDIAN)]
+         (Arrays/copyOfRange (.array bb) 0 4))
+    \f (let [bb (lsb/gen-byte-buffer)]
          (.putFloat bb (float value))
-         (.array bb))
-    \Z (string->bytes value)
+         (Arrays/copyOfRange (.array bb) 0 4))
+    ;; NB: \Z は string->bytes とは違い、末尾に \0 を要求する
+    \Z (let [str-size (count value)
+             buf (byte-array (inc str-size))]
+         (.getBytes value 0 str-size buf 0)
+         (aset-byte buf str-size 0)
+         buf)
     ;; \H nil
     \B (let [[array-type & array] (split value #",")]
          (case (first array-type)
            \c nil
            \C nil
            \s nil
-           \S (let [bb (.order (ByteBuffer/allocate 8) ByteOrder/LITTLE_ENDIAN)]
+           \S (let [bb (lsb/gen-byte-buffer)
+                    total-len (+ 1 4 (* 2 (count array)))]
                 ;; (lsb/write-bytes writer (byte-array 1 (byte \S)))
                 (.put bb (byte-array 1 (byte \S)) 1)
-
                 ;; (lsb/write-int writer (count array))
                 (.putInt bb (count array))
                 (doseq [v array]
                   ;; (lsb/write-short writer (Short/parseShort v))
                   (.putShort bb (Short/parseShort v)))
-                (.array bb))
+                (Arrays/copyOfRange (.array bb) 0 total-len))
            \i nil
            \I nil
            \f nil))))
