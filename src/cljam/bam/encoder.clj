@@ -116,9 +116,10 @@
          (.putFloat bb (float value))
          (Arrays/copyOfRange (.array bb) 0 4))
     ;; NB: \Z は string->bytes とは違い、末尾に \0 を要求する
-    \Z (let [str-size (count value)
+    \Z (let [^String text value
+             str-size (count text)
              buf (byte-array (inc str-size))]
-         (.getBytes value 0 str-size buf 0)
+         (.getBytes text 0 str-size buf 0)
          (aset-byte buf str-size 0)
          buf)
     ;; \H nil
