@@ -101,8 +101,8 @@
         options-summary]
        (cstr/join \newline)))
 
-(def ^:private num-block 500000)
-(def ^:private num-write-block 50000)
+(def ^:private num-block 10000)
+(def ^:private num-write-block 1000)
 
 (defn convert [args]
   (let [{:keys [options arguments errors summary]} (parse-opts args convert-cli-options)]
