@@ -101,6 +101,7 @@
         options-summary]
        (cstr/join \newline)))
 
+;;; TODO: このパラメータは環境に応じて柔軟に設定できる必要がある
 (def ^:private num-block 10000)
 (def ^:private num-write-block 1000)
 
