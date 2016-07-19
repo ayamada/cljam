@@ -129,7 +129,7 @@
                     w (.writer wtr)]
                 (doseq [alns (partition-all num-block (io/read-alignments rdr {}))]
                   (let [blocks (doall (pmap (fn [lalns]
-                                              (map #(bae/encode % refs) lalns))
+                                              (doall (map #(bae/encode % refs) lalns)))
                                             (partition-all num-write-block alns)))]
                     (doseq [block blocks]
                       (doseq [e block]
