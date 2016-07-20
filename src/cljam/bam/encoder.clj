@@ -161,13 +161,13 @@
    (get-cigar aln)
    (get-seq aln)
    (encode-qual aln)
-   (map (fn [op]
-          (let [[tag value] (first (seq op))]
-            [(short (bit-or (bit-shift-left (byte (second (name tag))) 8)
-                            (byte (first (name tag)))))
-             (.getBytes ^String (:type value))
-             (encode-tag-value (first (:type value)) (:value value))]))
-        (:options aln))])
+   (doall (map (fn [op]
+                 (let [[tag value] (first (seq op))]
+                   [(short (bit-or (bit-shift-left (byte (second (name tag))) 8)
+                                   (byte (first (name tag)))))
+                    (.getBytes ^String (:type value))
+                    (encode-tag-value (first (:type value)) (:value value))]))
+               (:options aln)))])
 
 (defn write-encoded-alignment
   [w aln]
