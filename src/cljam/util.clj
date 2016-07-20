@@ -29,7 +29,7 @@
 ;; string utils
 ;; ------------
 
-(defn string->bytes [^String s]
+(defn ^"[B" string->bytes [^String s]
   (let [buf (byte-array (count s))]
     (.getBytes s 0 (count buf) buf 0)
     buf))
