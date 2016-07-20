@@ -5,13 +5,11 @@
   (:import [java.io DataInputStream DataOutputStream EOFException]
            [java.nio ByteBuffer ByteOrder]))
 
-(defn ^ByteBuffer gen-byte-buffer
+(defmacro ^ByteBuffer gen-byte-buffer
   "Generates a new `java.nio.ByteBuffer` instance with little-endian byte order.
   The default buffer size is 8."
-  ([]
-     (.order (ByteBuffer/allocate 8) ByteOrder/LITTLE_ENDIAN))
-  ([size]
-     (.order (ByteBuffer/allocate size) ByteOrder/LITTLE_ENDIAN)))
+  [& [size]]
+  `(.order (ByteBuffer/allocate ~(or size 8)) ByteOrder/LITTLE_ENDIAN))
 
 ;; Skip
 ;; ----
@@ -133,62 +131,72 @@
 ;; Writing
 ;; -------
 
-(defn write-char
-  [^DataOutputStream w b]
-  (let [bb (gen-byte-buffer)]
-    (.putChar bb b)
-    (.write w (.array bb) 0 1)
-    nil))
+(definline write-char
+  [w b]
+  `(let [^DataOutputStream w# ~w
+         bb# (gen-byte-buffer)]
+     (.putChar bb# ~b)
+     (.write w# (.array bb#) 0 1)
+     nil))
 
-(defn write-bytes
-  [^DataOutputStream w ^bytes b]
-  (.write w b 0 (count b))
-  nil)
+(definline write-bytes
+  [w b]
+  `(let [^DataOutputStream w# ~w
+         ^"[B" b# ~b]
+     (.write w# b# 0 (alength b#))
+     nil))
 
-(defn write-ubyte
-  [^DataOutputStream w b]
-  (let [bb (gen-byte-buffer)]
-    (.putShort bb b)
-    (.write w (.array bb) 0 1)
-    nil))
+(definline write-ubyte
+  [w b]
+  `(let [^DataOutputStream w# ~w
+         bb# (gen-byte-buffer)]
+     (.putShort bb# ~b)
+     (.write w# (.array bb#) 0 1)
+     nil))
 
-(defn write-short
-  [^DataOutputStream w n]
-  (let [bb (gen-byte-buffer)]
-    (.putShort bb n)
-    (.write w (.array bb) 0 2)
-    nil))
+(definline write-short
+  [ w n]
+  `(let [^DataOutputStream w# ~w
+         bb# (gen-byte-buffer)]
+     (.putShort bb# ~n)
+     (.write w# (.array bb#) 0 2)
+     nil))
 
-(defn write-ushort
-  [^DataOutputStream w n]
-  (let [bb (gen-byte-buffer)]
-    (.putInt bb n)
-    (.write w (.array bb) 0 2)
-    nil))
+(definline write-ushort
+  [w n]
+  `(let [^DataOutputStream w# ~w
+         bb# (gen-byte-buffer)]
+     (.putInt bb# ~n)
+     (.write w# (.array bb#) 0 2)
+     nil))
 
-(defn write-int
-  [^DataOutputStream w n]
-  (let [bb (gen-byte-buffer)]
-    (.putInt bb n)
-    (.write w (.array bb) 0 4)
-    nil))
+(definline write-int
+  [w n]
+  `(let [^DataOutputStream w# ~w
+         bb# (gen-byte-buffer)]
+     (.putInt bb# ~n)
+     (.write w# (.array bb#) 0 4)
+     nil))
 
-(defn write-long
-  [^DataOutputStream w n]
-  (let [bb (gen-byte-buffer)]
-    (.putLong bb n)
-    (.write w (.array bb) 0 8)
-    nil))
+(definline write-long
+  [w n]
+  `(let [^DataOutputStream w# ~w
+         bb# (gen-byte-buffer)]
+     (.putLong bb# ~n)
+     (.write w# (.array bb#) 0 8)
+     nil))
 
-(defn write-float
-  [^DataOutputStream w n]
-  (let [bb (gen-byte-buffer)]
-    (.putFloat bb n)
-    (.write w (.array bb) 0 4)
-    nil))
+(definline write-float
+  [w n]
+  `(let [^DataOutputStream w# ~w
+         bb# (gen-byte-buffer)]
+     (.putFloat bb# ~n)
+     (.write w# (.array bb#) 0 4)
+     nil))
 
-(defn write-string
-  [^DataOutputStream w s]
-  (let [data-bytes (string->bytes s)]
-   (.write w data-bytes 0 (count data-bytes))
-   nil))
+(definline write-string
+  [w s]
+  `(let [^DataOutputStream w# ~w
+         data-bytes# (string->bytes ~s)]
+     (.write w# data-bytes# 0 (alength data-bytes#))
+     nil))
