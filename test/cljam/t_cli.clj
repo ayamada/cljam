@@ -1,7 +1,7 @@
 (ns cljam.t-cli
-  (:use midje.sweet
-        cljam.t-common)
-  (:require [clojure.java.io :as io]
+  (:require [midje.sweet :refer :all]
+            [cljam.t-common :refer :all]
+            [clojure.java.io :as io]
             [cljam.cli :as cli]))
 
 (defmacro with-out-file

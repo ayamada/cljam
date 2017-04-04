@@ -6,6 +6,28 @@
             [cljam.io :as io]
             [cavia.core :as cavia :refer [defprofile with-profile]]))
 
+(def third #(nth % 2 nil))
+
+(defn not-thrown? [& _] true)
+
+(defmacro with-before-after [params & bodies]
+  (let [before-expr (third (first (filter #(= 'before (first %)) params)))
+        after-expr (third (first (filter #(= 'after (first %)) params)))]
+    `(do
+       ~before-expr
+       (try
+         ~@bodies
+         (finally ~after-expr)))))
+
+(defmacro defwba [sym params]
+  (let [before-expr (third (first (filter #(= 'before (first %)) params)))
+        after-expr (third (first (filter #(= 'after (first %)) params)))]
+    `(defn ~sym [f#]
+       ~before-expr
+       (try
+         (f#)
+         (finally ~after-expr)))))
+
 (defprofile mycavia
   {:resources [{:id "large.bam"
                 :url "https://test.chrov.is/data/GSM721144_H3K36me3.nodup.bam"

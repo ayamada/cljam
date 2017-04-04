@@ -1,7 +1,7 @@
 (ns cljam.t-bam
-  (:use midje.sweet
-        cljam.t-common)
-  (:require [clojure.java.io :refer [copy file]]
+  (:require [clojure.test :refer :all]
+            [cljam.t-common :refer :all]
+            [clojure.java.io :refer [copy file]]
             [cljam.bam :as bam]
             [cljam.io :as io]
             [cljam.sorter :as sorter]))
@@ -9,50 +9,53 @@
 (def temp-file (str temp-dir "/test.bam"))
 (def temp-file-sorted (str temp-dir "/test.sorted.bam"))
 
-(fact "about slurp-bam"
-  (slurp-bam-for-test test-bam-file) => test-sam)
+(deftest slurp-bam
+  (is (= (slurp-bam-for-test test-bam-file) test-sam)))
 
-(fact "about slurp-bam (medium file)" :slow
-  (slurp-bam-for-test medium-bam-file) => anything)
+(deftest ^:slow slurp-bam-medium-file
+  (is (not-thrown? (slurp-bam-for-test medium-bam-file))))
 
 ;; NB: Cannot slurp large BAM (cause `java.lang.OutOfMemoryError`)
-;(with-state-changes [(before :facts (prepare-cavia!))]
-;  (fact "about slurp-bam (large file)" :slow :heavy
-;        (slurp-bam-for-test large-bam-file) => anything))
+;; (deftest ^:slow ^:heavy slurp-bam-large-file
+;;   (with-before-after [(before :facts (prepare-cavia!))]
+;;     (is (not-thrown? (slurp-bam-for-test large-bam-file)))))
 
-(with-state-changes [(before :facts (prepare-cache!))
-                     (after :facts (clean-cache!))]
-  (fact "about spit-bam"
-    (spit-bam-for-test temp-file test-sam) => anything
-    (slurp-bam-for-test temp-file) => test-sam))
+(deftest spit-bam
+  (with-before-after [(before :facts (prepare-cache!))
+                      (after :facts (clean-cache!))]
+    (is (not-thrown? (spit-bam-for-test temp-file test-sam)))
+    (is (= (slurp-bam-for-test temp-file) test-sam))))
 
-(with-state-changes [(before :facts (prepare-cache!))
-                     (after :facts (clean-cache!))]
-  (fact "about spit-bam (medium file)" :slow
-    (spit-bam-for-test
-      temp-file (slurp-bam-for-test medium-bam-file)) => anything))
+(deftest ^:slow spit-bam-medium-file
+  (with-before-after [(before :facts (prepare-cache!))
+                      (after :facts (clean-cache!))]
+    (is (not-thrown? (spit-bam-for-test temp-file
+                                        (slurp-bam-for-test medium-bam-file))))))
 
 ;; NB: Cannot spit large BAM (cause `java.lang.OutOfMemoryError`)
-;(with-state-changes [(before :facts (do (prepare-cavia!)
-;                                        (prepare-cache!)))
-;                     (after :facts (clean-cache!))]
-;  (fact "about spit-bam (large file)" :slow :heavy
-;    (spit-bam-for-test
-;      temp-file (slurp-bam-for-test large-bam-file)) => anything))
+;; (deftest ^:slow ^:heavy spit-bam-large-file
+;;   (with-before-after [(before :facts (do (prepare-cavia!)
+;;                                          (prepare-cache!)))
+;;                       (after :facts (clean-cache!))]
+;;     (is (not-thrown? (spit-bam-for-test temp-file
+;;                                     (slurp-bam-for-test large-bam-file))))))
 
-(with-state-changes [(before :facts (do (prepare-cache!)
-                                        (spit-bam-for-test temp-file test-sam)))
-                     (after :facts (clean-cache!))]
-  (fact "about BAMReader"
-    (let [rdr (bam/reader temp-file :ignore-index true)]
-      (io/read-refs rdr) => test-sam-refs))
-  (fact "about BAMReader (medium file)" :slow
-    (let [rdr (bam/reader medium-bam-file :ignore-index true)]
-      (io/read-refs rdr) => medium-sam-refs)))
+(defwba bamreader-wba
+  [(before :facts (do (prepare-cache!)
+                      (spit-bam-for-test temp-file test-sam)))
+   (after :facts (clean-cache!))])
 
-(with-state-changes [(before :facts (do (prepare-cache!)
-                                        (prepare-cavia!)))
-                     (after :facts (clean-cache!))]
-  (fact "about BAMReader (large file)" :slow :heavy
+(deftest bamreader
+  (bamreader-wba #(let [rdr (bam/reader temp-file :ignore-index true)]
+                    (is (= (io/read-refs rdr) test-sam-refs)))))
+
+(deftest ^:slow bamreader-medium-file
+  (bamreader-wba #(let [rdr (bam/reader medium-bam-file :ignore-index true)]
+                    (is (= (io/read-refs rdr) medium-sam-refs)))))
+
+(deftest ^:slow ^:heavy bamreader-large-file
+  (with-before-after [(before :facts (do (prepare-cache!)
+                                         (prepare-cavia!)))
+                      (after :facts (clean-cache!))]
     (let [rdr (bam/reader large-bam-file :ignore-index true)]
-      (io/read-refs rdr) => large-sam-refs)))
+      (is (= (io/read-refs rdr) large-sam-refs)))))
