@@ -5,7 +5,7 @@
             [clojure.string :as str]))
 
 ;; (deftest slurp-fasta
-;;   (is (= (fa/slurp test-fa-file) test-fa)))
+;;   (is (= (fasta/slurp test-fa-file) test-fa)))
 
 (deftest read-fasta-file
   (let [rdr (fasta/reader test-fa-file)]
