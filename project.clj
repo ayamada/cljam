@@ -24,9 +24,9 @@
              :1.9 {:dependencies [[org.clojure/clojure "1.9.0-alpha14"]]}
              :uberjar {:main cljam.main
                        :aot :all}}
-  :test-selectors {:default (complement #{:heavy})
+  :test-selectors {:default (complement #{:slow :heavy})
                    :slow :slow
-                   :heavy :heavy
+                   :heavy #{:slow :heavy}
                    :all (constantly true)}
   :aliases {"docs" ["do" "codox" ["marg" "-d" "target/literate" "-m"]]}
   :bin {:name "cljam"}

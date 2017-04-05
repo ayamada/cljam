@@ -19,8 +19,8 @@
                   :skip number?
                   :seq vector?
                   :bin-index vector?
-                  :linear-index vector?})
-      (tbi/read-index test-tabix-file)))
+                  :linear-index vector?}
+                 (tbi/read-index test-tabix-file))))
 
 (deftest ^:slow ^:heavy large-file
   (with-before-after {:before (prepare-cavia!)}
