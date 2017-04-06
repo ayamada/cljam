@@ -17,6 +17,10 @@
                    :plugins [[lein-bin "0.3.5"]
                              [lein-codox "0.10.3"]
                              [lein-marginalia "0.9.0"]]
+                   :test-selectors {:default #(not-any? % [:slow :heavy])
+                                    :slow :slow
+                                    :heavy #(every? % [:slow :heavy])
+                                    :all (constantly true)}
                    :main ^:skip-aot cljam.main
                    :global-vars {*warn-on-reflection* true}}
              :1.7 {:dependencies [[org.clojure/clojure "1.7.0"]]}
@@ -24,10 +28,6 @@
              :1.9 {:dependencies [[org.clojure/clojure "1.9.0-alpha14"]]}
              :uberjar {:main cljam.main
                        :aot :all}}
-  :test-selectors {:default #(not-any? % [:slow :heavy])
-                   :slow :slow
-                   :heavy #(every? % [:slow :heavy])
-                   :all (constantly true)}
   :aliases {"docs" ["do" "codox" ["marg" "-d" "target/literate" "-m"]]}
   :bin {:name "cljam"}
   :codox {:namespaces [#"^cljam\.(?!cli)(?!lsb)(?!main)(?!util)[^\.]+$"]
