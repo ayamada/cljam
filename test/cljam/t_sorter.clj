@@ -107,10 +107,7 @@
     ;;        (slurp-sam-for-test tmp-queryname-sorted-sam-file))) ; TODO: future
     ;; (is (= (slurp-bam-for-test tmp-queryname-sorted-bam-file-2)
     ;;        (slurp-bam-for-test tmp-queryname-sorted-bam-file))) ; TODO: future
-    ;; TODO: Add test sorter/sort-by-pos with bam file includes many blocks
-    ;;       (Currently, testing bam files have only one block)
-    ;; (is (not-throw? (with-reader sorter/sort-by-pos many-blocks-bam-file (str temp-dir "/many.bam"))))
-    ))
+    (is (not-throw? (with-reader sorter/sort-by-pos many-blocks-bam-file (str temp-dir "/many.bam"))))))
 
 (deftest-slow about-sorting-medium-file
   (with-before-after {:before (prepare-cache!)
